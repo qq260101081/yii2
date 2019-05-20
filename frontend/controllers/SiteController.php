@@ -1,6 +1,7 @@
 <?php
 namespace frontend\controllers;
 
+use common\models\Orders;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
 use Yii;
@@ -73,18 +74,15 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        // 获取 redis 组件
-	$redis = Yii::$app->redis;
-	// 判断 key 为 username 的是否有值，有则打印，没有则赋值
-	$key = 'username';
+        $redis = Yii::$app->redis;
 
-	if ($val = $redis->get($key)) {
-    		var_dump($val);
-	} else {
-    		$redis->set($key, '1111marko');
-    		$redis->expire($key, 5);
-	}
-echo '===';die;
+        $model = Orders::find()->where(['id' => 1])->one();
+        if ($model->number > 0) {
+            $redis->zadd('number', 1);
+            $model->number = $model->number - 1;
+            $model->save(false);
+        }
+
         return $this->render('index');
     }
 
