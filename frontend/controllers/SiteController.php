@@ -75,14 +75,31 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $redis = Yii::$app->redis;
+        $redis->incr('total');
+	
+	//$redis->del('total');
+	//$redis->del('number');
+	//$redis->del('success');
+	//$redis->del('faild');die;
+	var_dump('total:'. $redis->get('total'));
+	var_dump('success: '. $redis->get('success'). "\n");
+	var_dump('faild:'. $redis->get('faild') . "\n");
 
-        $model = Orders::find()->where(['id' => 1])->one();
-        if ($model->number > 0) {
-            $redis->zadd('number', 1);
+	var_dump($redis->get('number'));die;
+        
+	$model = Orders::find()->where(['id' => 1])->one();
+//        print_r($model);die;
+	if ($model->number > 0) {
+            $redis->incr('number');
             $model->number = $model->number - 1;
-            $model->save(false);
+            $result = $model->save(false);
+	    if($result){
+	   	$redis->incr('success');	
+	    }else{
+		$redis->incr('faild');
+	    }
         }
-
+die('成功');
         return $this->render('index');
     }
 
