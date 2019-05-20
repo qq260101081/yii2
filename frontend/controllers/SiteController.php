@@ -67,39 +67,40 @@ class SiteController extends Controller
         ];
     }
 
-    /**
-     * Displays homepage.
-     *
-     * @return mixed
-     */
+
     public function actionIndex()
     {
         $redis = Yii::$app->redis;
-        $redis->incr('total');
-	
-	//$redis->del('total');
-	//$redis->del('number');
-	//$redis->del('success');
-	//$redis->del('faild');die;
-	var_dump('total:'. $redis->get('total'));
-	var_dump('success: '. $redis->get('success'). "\n");
-	var_dump('faild:'. $redis->get('faild') . "\n");
+        //$redis->incr('total');
 
-	var_dump($redis->get('number'));die;
-        
-	$model = Orders::find()->where(['id' => 1])->one();
-//        print_r($model);die;
-	if ($model->number > 0) {
-            $redis->incr('number');
-            $model->number = $model->number - 1;
-            $result = $model->save(false);
-	    if($result){
-	   	$redis->incr('success');	
-	    }else{
-		$redis->incr('faild');
-	    }
+        $redis->del('total');
+        $redis->del('number');
+        $redis->del('success');
+        $redis->del('faild');die;
+        var_dump('total:' . $redis->get('total'));
+        var_dump('success: ' . $redis->get('success'));
+        var_dump('faild:' . $redis->get('faild'));
+        var_dump('update:' . $redis->get('update'));die;
+
+        $model = Orders::find()->where(['id' => 1])->one();
+        //print_r($model);die;
+        if ($model->number > 0) {
+            $redis->incr('update');
+
+            $result = Yii::$app->getDb()->createCommand("UPDATE goods SET number = number - 1 WHERE id = 1 LIMIT 1")->execute();
+
+            if($result){
+                $orderModel = new Orders();
+                $orderModel->price = $model->price;
+                $orderModel->name = $model->name;
+                $orderModel->create_time = time();
+                $orderModel->save(false);
+                $redis->incr('success');
+            }else{
+                $redis->incr('faild');
+            }
         }
-die('成功');
+        die('成功');
         return $this->render('index');
     }
 
