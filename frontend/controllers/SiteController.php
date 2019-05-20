@@ -2,6 +2,7 @@
 namespace frontend\controllers;
 
 use common\models\Orders;
+use common\models\Goods;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
 use Yii;
@@ -71,19 +72,18 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $redis = Yii::$app->redis;
-        //$redis->incr('total');
+        $redis->incr('total');
 
-        $redis->del('total');
-        $redis->del('number');
-        $redis->del('success');
-        $redis->del('faild');die;
+        //$redis->del('total');
+        //$redis->del('update');
+        //$redis->del('success');
+        //$redis->del('faild');die;
         var_dump('total:' . $redis->get('total'));
         var_dump('success: ' . $redis->get('success'));
         var_dump('faild:' . $redis->get('faild'));
         var_dump('update:' . $redis->get('update'));die;
 
-        $model = Orders::find()->where(['id' => 1])->one();
-        //print_r($model);die;
+        $model = Goods::find()->where(['id' => 1])->one();
         if ($model->number > 0) {
             $redis->incr('update');
 
