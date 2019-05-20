@@ -1,7 +1,6 @@
 <?php
 namespace frontend\controllers;
 
-use common\models\Orders;
 use common\models\Goods;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
@@ -69,39 +68,29 @@ class SiteController extends Controller
     }
 
 
+    /**
+     * 下单
+     * @return string
+     * @throws \yii\db\Exception
+     */
     public function actionIndex()
     {
-        $redis = Yii::$app->redis;
-        $redis->incr('total');
+        $redis = Yii::$app->redis; // 使用redis做一些统计
+        $redis->incr('total'); // 自增（记录一共成功进来了多少个请求）
 
         //$redis->del('total');
         //$redis->del('update');
-        //$redis->del('success');
-        //$redis->del('faild');die;
-        var_dump('total:' . $redis->get('total'));
-        var_dump('success: ' . $redis->get('success'));
-        var_dump('faild:' . $redis->get('faild'));
-        var_dump('update:' . $redis->get('update'));die;
+        //var_dump('total:' . $redis->get('total'));
+        //var_dump('success: ' . $redis->get('success'));
 
-        $model = Goods::find()->where(['id' => 1])->one();
-        if ($model->number > 0) {
-            $redis->incr('update');
+        $model = Goods::find()->where(['id' => 1])->one(); // 购买的商品信息
+        if ($model->number > 0) { // 判断库存是否大于0
+            $redis->incr('update'); // 记录并发时进来的请求数
 
-            $result = Yii::$app->getDb()->createCommand("UPDATE goods SET number = number - 1 WHERE id = 1 LIMIT 1")->execute();
+            $result = Yii::$app->getDb()->createCommand("UPDATE goods SET number = number - 1 WHERE id = 1 LIMIT 1")->execute(); // 更新库存
 
-            if($result){
-                $orderModel = new Orders();
-                $orderModel->price = $model->price;
-                $orderModel->name = $model->name;
-                $orderModel->create_time = time();
-                $orderModel->save(false);
-                $redis->incr('success');
-            }else{
-                $redis->incr('faild');
-            }
         }
         die('成功');
-        return $this->render('index');
     }
 
     /**
