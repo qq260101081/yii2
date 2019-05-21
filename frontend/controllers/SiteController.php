@@ -69,6 +69,21 @@ class SiteController extends Controller
 
 
     /**
+     * 提前把商品库存入队列
+     */
+    public function actionSetStore()
+    {
+        $redis = Yii::$app->redis;
+        $model = Goods::find()->where(['id' => 1])->one(); //商品信息
+
+        for ($i = 0; $i < $model->number; $i++)
+        {
+            $redis->lpush('goods_store', 1);
+        }
+        var_dump($redis->llen('goods_store'));
+    }
+
+    /**
      * 下单
      * @return string
      * @throws \yii\db\Exception
@@ -76,15 +91,15 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $redis = Yii::$app->redis; // 使用redis做一些统计
-        $redis->incr('total'); // 自增（记录一共成功进来了多少个请求）
+        //$redis->incr('total'); // 自增（记录一共成功进来了多少个请求）
 
-        //$redis->del('total');
-        //$redis->del('update');
+        $redis->del('total');
+        $redis->del('update');die;
         //var_dump('total:' . $redis->get('total'));
         //var_dump('success: ' . $redis->get('success'));
 
-        $model = Goods::find()->where(['id' => 1])->one(); // 购买的商品信息
-        if ($model->number > 0) { // 判断库存是否大于0
+        $count = $redis->lpop('goods_store'); // 出队列
+        if ($count) { // 判断库存是否出完队列
             $redis->incr('update'); // 记录并发时进来的请求数
 
             $result = Yii::$app->getDb()->createCommand("UPDATE goods SET number = number - 1 WHERE id = 1 LIMIT 1")->execute(); // 更新库存
