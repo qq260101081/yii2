@@ -67,16 +67,20 @@ class SiteController extends Controller
         ];
     }
 
-
+    public function actionGet(){
+	$redis = Yii::$app->redis;
+	var_dump($redis->llen('goods_store'));
+    }
     /**
      * 提前把商品库存入队列
      */
     public function actionSetStore()
     {
         $redis = Yii::$app->redis;
-        $model = Goods::find()->where(['id' => 1])->one(); //商品信息
+        $redis->del('goods_store');
+	$model = Goods::find()->where(['id' => 1])->one(); //商品信息
 
-        for ($i = 0; $i < $model->number; $i++)
+        for ($i = 0; $i < 100; $i++)
         {
             $redis->lpush('goods_store', 1);
         }
@@ -93,11 +97,12 @@ class SiteController extends Controller
         $redis = Yii::$app->redis; // 使用redis做一些统计
         //$redis->incr('total'); // 自增（记录一共成功进来了多少个请求）
 
-        $redis->del('total');
-        $redis->del('update');die;
+	//$redis->del('goods_store');
+        //$redis->del('total');
+        //$redis->del('update');die;
         //var_dump('total:' . $redis->get('total'));
-        //var_dump('success: ' . $redis->get('success'));
-
+        var_dump('update: ' . $redis->get('update'));die;
+//
         $count = $redis->lpop('goods_store'); // 出队列
         if ($count) { // 判断库存是否出完队列
             $redis->incr('update'); // 记录并发时进来的请求数
